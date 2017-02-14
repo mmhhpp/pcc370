@@ -1,0 +1,79 @@
+
+PROJECT STATUS AS OF FEB. 2017
+==============================
+A work in progress, the project is bootstrapped by first building the C
+sources under linux to produce a linux executable.  The C source modules
+are combined with several C sources and two assembly source modules from 
+the PDPCLIB (PDOS) project. These C files are compiled using the linux
+executable (named "comp") to 370 assembler language output files.  These
+files along with the two PDPCLIB assembler sources are transferred to MVS
+and assembled/linked.  The resulting MVS executable is capable of compiling
+very simple C source programs although there are several bugs. It is not known 
+how many more bugs will need to be fixed before a stable compiler exists.
+
+The original sources of the portable C compiler were from version 7 of the 
+early unix distirbutions, and based on the PDP-11 backend.  Any errors
+that were introduced are mine and may be due to incomplete or erroneous
+understanding of the original intent.  The reader is strongly encouraged to
+thoroughly read the paper by S. C. Johnson ("A Tour Through the Portable C
+Compiler", 197x).
+
+Note that this version of the compiler has been developed for MVS/370, but
+nothing in the work should preclude the addition of VM/370 support.
+
+This project would not have been possible without GCC/370 and PDOS.
+
+ITEMS YOU WILL NEED TO CHANGE BEFORE BUILDING
+=============================================
+yacc/files - update this path (optional, only if you want to rebuild yacc)
+	# define PARSER "/home/mhp/pcc/yacc/yaccpar"
+370/makefile - update path setting
+	M=/home/mhp/pcc/370
+
+
+
+TO BUILD
+========
+
+cd 370/
+make
+./docomp.sh
+cd ../lib
+./docomp.sh
+# check all the .err files for errors/warnings [see note 8]
+cd ../370
+./asmall.sh
+# asmall.sh should produce a file named deck.txt
+# you will need to pre-allocate and catalog the SYSPUNCH dataset 
+# (HERC01.OBJ) in the JCL [see note 6]
+# you must then submit the JCL file [deck.txt] to MVS as a batch job
+# next you will need to pre-allocate and catalog the SYSLMOD dataset 
+# e.g., HERC01.LOAD [see note 6]
+# submit the linker JCL [see note 7]
+./lkc.sh
+
+TO RUN
+======
+# first transfer the test C source file lib/main.e to MVS
+# ensure that the [ and ] characters were not mangled in the upload
+# then submit the JCL file [runjcl.txt] to MVS as a batch job
+# as of this writing the compiler produces most but not all of the output
+# and there are discrepancies versus the output of 'comp' run on linux.
+
+NOTES
+=====
+1. yacc (included) need only be rebuilt if you're rebuilding the cgram.c file.
+
+2. three of the assembly steps should receive a code 4 - all the remaining jobs should receive a code 0.  (total five statements flagged, these will have to be fixed, someday)
+
+3. the cpp preprocessor hasn't been bootstrapped - accordingly 'gcc -E' is used for all preprocessing duties.  Any C file input to the 'comp' executable (executing either on the build host or in MVS/370) must already have the preprocessing fully done for it beforehand (e.g., the files produced by the host build process having a '.e' suffix)
+
+4. the build sh scripts require the "basname" command with support for the '-s' option - this option is fairly new and may not appear in some older distros - beware.
+
+5. any additions herein are released under the same license as the original unix distributions
+
+6. the following files contain MVS host dataset names and jobcard info that you may need to edit: asmjcl.txt lkc.txt runjcl.txt
+
+7. the linker script assumes an MVS reader is listening on localhost port 3505.
+
+8. no errors should be generated in the *.err files; the expected warning counts are 45 stdio.err, 3 stdlib.err, 4 string.err, 1 local2.err

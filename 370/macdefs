@@ -1,0 +1,69 @@
+# define makecc(val,i)  lastcon = i ? (val<<8)|lastcon : val  
+
+# define  ARGINIT 0 
+# define  AUTOINIT 88*8
+# define  SZCHAR 8
+# define  SZINT 32
+# define  SZFLOAT 32
+# define  SZDOUBLE 64
+# define  SZLONG 32
+# define  SZSHORT 16
+# define SZPOINT 32
+# define ALCHAR 8
+# define ALINT 32
+# define ALFLOAT 32
+# define ALDOUBLE 64
+# define ALLONG 32
+# define ALSHORT 16
+# define ALPOINT 32
+# define ALSTRUCT 32
+# define  ALSTACK 64 
+
+/*	size in which constants are converted */
+/*	should be long if feasable */
+
+# define CONSZ long
+# define CONFMT "%ld"
+
+/*	size in which offsets are kept
+/*	should be large enough to cover address space in bits
+*/
+
+# define OFFSZ long
+
+/* 	character set macro */
+
+# define  CCTRANS(x) ((unsigned char)(cp_819_to_1047[x]))
+
+/* register cookie for stack poINTer */
+
+# define  STKREG 13
+# define ARGREG 11
+
+/*	maximum and minimum register variables */
+
+# define MAXRVAR 4
+# define MINRVAR 2
+
+	/* various standard pieces of code are used */
+# define STDPRTREE
+# define LABFMT "$L%05d"
+
+/* definition indicates automatics and/or temporaries
+   are on a negative growing stack */
+
+#if 0
+# define BACKAUTO
+# define BACKTEMP
+#endif
+
+# define RTOLBYTES
+# ifndef FORT
+# define ONEPASS
+# endif
+
+# ifndef FORT
+# define EXIT dexit
+# endif
+
+# define ENUMSIZE(high,low) INT
