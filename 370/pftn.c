@@ -1,5 +1,7 @@
 # include "mfile1"
 
+extern unsigned char cp_819_to_1047[];
+
 struct instk {
 	int in_sz;   /* size of array element */
 	int in_x;    /* current index for structure member in structure initializations */
@@ -1486,7 +1488,7 @@ lookup( name, s) char *name; {
 
 	i = 0;
 	for( p=name, j=0; *p != '\0'; ++p ){
-		i += *p;
+		i += CCTRANS(*p);
 		if( ++j >= NCHNAM ) break;
 		}
 	i = i%SYMTSZ;

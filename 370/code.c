@@ -239,6 +239,7 @@ defnam( p ) register struct symtab *p; {
  else if (p->sizoff > SHORT) fprintf( tempfile, "          DC   0F\n");
 #endif
  if( p->sclass == EXTDEF ) fprintf( outfile, "          ENTRY %s\n", exname( p->sname));
+ fprintf ( outfile, "* defnam: sclass %d slevel %d\n", p->sclass, p->slevel );
  if( p->sclass == STATIC && p->slevel>1 ) deflab( p->offset, 0 );
  else fprintf( outfile, "%s  EQU   *    defnam sizoff %d d %d t %d/0%o c %d l %d\n", exname( p->sname ) , p->sizoff, dimtab[p->sizoff] >> 3, p->stype & 0xf, p->stype & ~0xf, p->sclass, p->slevel);
  }
@@ -313,66 +314,81 @@ where(c){ /* print location of error  */
  fprintf( stderr, "%s, line %d: ", ftitle, lineno );
  }
 
-char *tmpname = "/tmp/pccXXXXXX";
-char *tmpn2 = "/tmp/pccX2XXXX";
+static char csect_name[10];
 
 main( argc, argv ) char *argv[]; {
  int dexit();
  register int c;
  register int i;
  int r;
- char tmpname_[20];
- char tmpn2_[20];
 
  outfile = stdout;
- for( i=1; i<argc; ++i )
+ for( i=1; i<argc; ++i ) {
   if( argv[i][0] == '-' && argv[i][1] == 'X' && argv[i][2] == 'p' ) {
    proflag = 1;
    }
-#ifdef TARGET_370
+  if( argv[i][0] == '-' && argv[i][1] == 'M' ) {
+    r = strlen(&argv[i][2]);
+    if (r>7) r = 7;
+    if (r) {
+        csect_name[0] = '$';
+        memcpy(&csect_name[1], &argv[i][2], r);
+    }
+    for( i=0; csect_name[i] && i < sizeof(csect_name); i++) {
+        if( csect_name[i] == '_' ) csect_name[i] = '@';
+    }
+  }
+ }
+#ifdef __MVS__
  tempfile = fopen( "dd:sysut1", "w");
  tempf2 = fopen( "dd:sysut2", "w");
 #else
- strcpy(tmpname_, tmpname);
- close(mkstemp(tmpname_));
- strcpy(tmpn2_, tmpn2);
- close(mkstemp(tmpn2_));
- tempfile = fopen( tmpname_, "w" );
- tempf2 = fopen( tmpn2_, "w" );
+ tempfile = tmpfile();
+ tempf2 = tmpfile();
 #endif
  if(signal( SIGHUP, SIG_IGN) != SIG_IGN) signal(SIGHUP, dexit);
  if(signal( SIGINT, SIG_IGN) != SIG_IGN) signal(SIGINT, dexit);
  if(signal( SIGTERM, SIG_IGN) != SIG_IGN) signal(SIGTERM, dexit);
 
  printf("          COPY  PDPTOP\n");
- printf("          CSECT\n");
+ if (csect_name[0])
+   printf("%s    CSECT\n", csect_name);
+ else
+   printf("          CSECT\n");
 
  r = mainp1( argc, argv );
 
- tempfile = freopen( tmpname_, "r", tempfile );
- if( tempfile != NULL )
-  while((c=getc(tempfile)) != EOF )
-   putchar(c);
- else cerror( "Lost temp file" );
-#ifndef TARGET_370
- unlink(tmpname_);
+ fflush( tempfile );
+ fflush( tempf2 );
+ fprintf(tempfile, "*\n");
+ fprintf(tempf2, "*\n");
+ printf("@FR0     EQU    0    FLOATING POINT REGISTER EQUATES\n");
+ printf("@FR2     EQU    2\n");
+ printf("@FR4     EQU    4\n");
+ printf("@FR6     EQU    6\n");
+#ifdef __MVS__
+ fclose( tempfile );
+ fclose( tempf2 );
+ tempfile = fopen( "dd:sysut1", "r" );
+ tempf2 = fopen( "dd:sysut2", "r" );
+#else
+ fseek ( tempfile, 0, SEEK_SET );
+ fseek ( tempf2, 0, SEEK_SET );
 #endif
- tempf2 = freopen( tmpn2_, "r", tempf2 );
- if( tempf2 != NULL )
-  while((c=getc(tempf2)) != EOF )
+
+ while((c=getc(tempfile)) != EOF )
    putchar(c);
- else cerror( "Lost temp f2" );
-#ifndef TARGET_370
- unlink(tmpn2_);
-#endif
+ while((c=getc(tempf2)) != EOF )
+   putchar(c);
+
+ fclose( tempfile );
+ fclose( tempf2 );
+
  printf("          END\n");
  return( r );
  }
 
 dexit( v ) {
-#ifndef TARGET_370
- unlink(tmpname);
-#endif
  exit(1);
  }
 
@@ -395,14 +411,18 @@ genswitch(p,n) register struct sw *p;{
 
   if( p[1].sval ){
    printf( "          S    15,=F'%d'  gensw0\n", p[1].sval );
-   printf( "          BM   $L%05d  gensw01\n", dlab );
+   printf( "          BNM  *+10        gensw01\n" );
+   printf( "          L    14,=A($L%05d)  gensw02\n", dlab );
+   printf( "          BR   14         gensw03\n" );
    }
 
   /* note that this is a cl; it thus checks
      for numbers below range as well as out of range.
-     */
+     fixme */
   printf( "          C    15,=F'%d'   gensw start\n", range );
-  printf( "          BH   $L%05d\n", dlab );
+  printf( "          BNH  *+10\n" );
+  printf( "          L    14,=A($L%05d)\n", dlab );
+  printf( "          BR   14         gensw\n" );
 
   printf( "          SLL  15,2\n" );
   printf( "          L    14,=A($L%05d)\n", swlab = getlab() );

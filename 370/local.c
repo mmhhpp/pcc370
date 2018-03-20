@@ -126,12 +126,20 @@ clocal(p) NODE *p; {
 		else {
 			/* meaningful ones are conversion of int to char, int to short,
 			   and short to char, and unsigned version of them */
+			if( m==UCHAR &&
+				(ml==CHAR || ml==SHORT || ml == INT || ml == LONG)
+			) break;
 			if( m==CHAR || m==UCHAR ){
 				if( ml==LONG || ml==ULONG ) break;
 				}
 			}
 
 		/* clobber conversion */
+		printf ("* clobber conv line %d ", lineno);
+		tprint( m );
+		printf (" ");
+		tprint( ml );
+		printf ("\n");
 		p->op = FREE;
 		return( p->left );  /* conversion gets clobbered */
 
@@ -222,11 +230,11 @@ incode( p, sz ) register NODE *p; {
 	/* inoff is updated to have the proper final value */
 	/* we also assume sz  < SZINT */
 	if (sz == 8)
-		fprintf (outfile, "          DC   XL1'%02X'   incode1 %d\n", p->lval, lineno);
+		fprintf (outfile, "          DC   AL1(%d)   incode1 %d\n", p->lval, lineno);
 	else if (sz == 16)
-		fprintf (outfile, "          DC   XL2'%.04X'   incode2 %d\n", p->lval, lineno);
+		fprintf (outfile, "          DC   AL2(%d)   incode2 %d\n", p->lval, lineno);
 	else if (sz == 32)
-		fprintf (outfile, "          DC   XL4'%08X'   incode3 %d\n", p->lval, lineno);
+		fprintf (outfile, "          DC   AL4(%d)   incode3 %d\n", p->lval, lineno);
 	else cerror ("incode size %d not supported", sz);
 
 	if((sz+inwd) > SZINT) cerror("incode: field > int");
@@ -248,7 +256,7 @@ fincode( d, sz ) double d; {
 	register int *mi = (int *)&d;
 
 	if( sz==SZDOUBLE )
-		fprintf( outfile, "          DC   D'%f' fincode4 line %d\n", d, lineno );
+		fprintf( outfile, "          DC   D'%e' fincode4 line %d\n", d, lineno );
 	else
 		fprintf( outfile, "%o; %o fincode2\n", mi[0], mi[1] );
 	inoff += sz;
@@ -334,7 +342,7 @@ commdec( id ){ /* make a common declaration for id, if reasonable */
 	fprintf( tempfile, "          ENTRY %s   commdec1\n", exname( q->sname ));
 	outfile = svfile;
 	}
-
+#if 0
 isitlong( cb, ce ){ /* is lastcon to be long or short */
 	/* cb is the first character of the representation, ce the last */
 
@@ -342,7 +350,7 @@ isitlong( cb, ce ){ /* is lastcon to be long or short */
 		lastcon >= (1L << (SZINT-1) ) ) return (1);
 	return(0);
 	}
-
+#endif
 
 isitfloat( s ) char *s; {
 	double atof();

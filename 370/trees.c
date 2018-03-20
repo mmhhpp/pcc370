@@ -1347,6 +1347,7 @@ prtree(p) register NODE *p; {
 
 p2tree(p) register NODE *p; {
 	register ty;
+	int tmp;
 
 # ifdef MYP2TREE
 	MYP2TREE(p);  /* local action can be taken here; then return... */
@@ -1365,7 +1366,8 @@ p2tree(p) register NODE *p; {
 			cp = exname( stab[p->rval].sname );
 			for( i=0; i<NCHNAM; ++i ) p->name[i] = *cp++;
 			}
-		else sprintf( p->name, LABFMT, -p->rval );
+		else { sprintf( p->name, LABFMT, -p->rval );
+		}
 		break;
 
 	case STARG:

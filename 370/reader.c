@@ -51,6 +51,11 @@ p2init( argc, argv ) char *argv[];{
 					--cp;
 					break;
 
+				case 'M':  /* pass1 flags */
+					while( *++cp ) { /* VOID */ }
+					--cp;
+					break;
+
 				case 'l':  /* linenos */
 					++lflag;
 					break;
@@ -146,6 +151,7 @@ mainp2( argc, argv ) char *argv[]; {
 			}
 		else {
 			if( baseoff > maxoff ) maxoff = baseoff;
+Z;
 			/* maxoff at end of ftn is max of autos and temps
 			   over all blocks in the function */
 			}

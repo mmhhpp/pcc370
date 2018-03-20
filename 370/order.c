@@ -14,7 +14,6 @@ stoasg( p, o ) register NODE *p; {
 
 deltest( p ) register NODE *p; {
 	/* should we delay the INCR or DECR operation p */
-	printf ("* deltest %s %o\n", opst[p->op], p);
 	if( p->op == INCR && p->left->op == REG && spsz( p->left->type, p->right->lval ) ){
 		/* STARREG */
 		return( 0 );
@@ -133,6 +132,7 @@ sucomp( p ) register NODE *p; {
 			return;
 
 		case UNARY MUL:
+			if( p->left->op == OREG ) { p->su = 1; return; }
 			if( shumul( p->left ) ) return;
 
 		default:
@@ -412,7 +412,6 @@ rallo( p, down ) register NODE *p; {
 
 offstar( p ) register NODE *p; {
 	/* handle indirections */
-
 	if( p->op == UNARY MUL ) p = p->left;
 
 	if( p->op == PLUS || p->op == MINUS ){

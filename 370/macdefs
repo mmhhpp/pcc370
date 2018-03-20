@@ -32,8 +32,11 @@
 # define OFFSZ long
 
 /* 	character set macro */
-
+#ifndef ibm
 # define  CCTRANS(x) ((unsigned char)(cp_819_to_1047[x]))
+#else
+# define  CCTRANS(x) (x)
+#endif
 
 /* register cookie for stack poINTer */
 

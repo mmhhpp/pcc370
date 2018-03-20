@@ -69,8 +69,8 @@ rnames[]= {  /* keyed to register number tokens */
 	"4", "5", "6", "7",
 	"8", "9", "10", "11",
 	"12", "13", "14", "15",
-#if 0
-	"FR0", "FR2", "FR4", "FR6"       /* fp regs */
+#if 1
+	"@FR0", "@FR2", "@FR4", "@FR6"       /* fp regs */
 #else
 	"0", "2", "4", "6"               /* fp regs */
 #endif
@@ -97,10 +97,11 @@ int arglvlc[ARGLVLS];	/* next arg word to be assigned */
 zzzcode( p, c ) NODE *p; {
 	register m;
 	int r;
+	int oreg_r, oreg_val, treg_r, freg_r;
 	switch( c ){
 
 	case 'G':
-		printf ("%d", p->right->lval);
+		printf ("%ld", p->right->lval & 255);
 		return;
 
 	case 'J':
@@ -112,8 +113,12 @@ zzzcode( p, c ) NODE *p; {
 		fprintf ( outfile, "          DC    ");
 		conput ( getlr( p, 'L') );
 		fprintf ( outfile, "     zk line %d\n", lineno );
+		return;
 
-	case 'B':	/* output b if type is byte */
+	case 'B':
+		if ( p->op != ICON )
+			cerror ("ZB not ICON");
+		fprintf ( outfile, "%ld", p->lval  & 0xff );
 		return;
 
 	case 'N':  /* logical ops, turned into 0-1 */
@@ -161,12 +166,16 @@ zzzcode( p, c ) NODE *p; {
 		arglvlc[arglvl-1] --;
 		if (arglvlc[arglvl-1] < arglvlo[arglvl-1])
 			cerror ("arglvl: overrun");
+#if 0
 		if (ilfield) {
-			printf( "$B%05d+%ld(%d,%d)" , ftnno, arglvlc[arglvl-1]*4, ilfield, STKREG );
+			printf( "$B%05d+%d(%d,%d)" , ftnno, arglvlc[arglvl-1]*4, ilfield, STKREG );
 			ilfield = 0;
 			}
 		else
-			printf( "$B%05d+%ld(%d)" , ftnno, arglvlc[arglvl-1]*4, STKREG );
+			printf( "$B%05d+%d(%d)" , ftnno, arglvlc[arglvl-1]*4, STKREG );
+#endif
+		printf("          L    1,=AL4($B%05d+%d)   arg %d arg1\n", ftnno, arglvlc[arglvl-1]*4, arglvlc[arglvl-1] );
+		printf("          AR   1,13    arg2\n");
 		return;
 
 	case '8':
@@ -176,7 +185,17 @@ zzzcode( p, c ) NODE *p; {
 		arglvlc[arglvl-1] --;
 		if (arglvlc[arglvl-1] < arglvlo[arglvl-1])
 			cerror ("arglvl: overrun3");
-		printf( "$B%05d+%ld(,%d)" , ftnno, arglvlc[arglvl-1]*4, STKREG );
+		printf( "$B%05d+%d(8,%d)" , ftnno, arglvlc[arglvl-1]*4, STKREG );
+		return;
+
+	case 'D':
+		arglvlc[arglvl-1] --;
+		if (arglvlc[arglvl-1] < arglvlo[arglvl-1])
+			cerror ("arglvl: overrunD2");
+		arglvlc[arglvl-1] --;
+		if (arglvlc[arglvl-1] < arglvlo[arglvl-1])
+			cerror ("arglvl: overrunD3");
+		printf( "$B%05d+%d(,%d)" , ftnno, arglvlc[arglvl-1]*4, STKREG );
 		return;
 
 	case '4':
@@ -261,6 +280,59 @@ zzzcode( p, c ) NODE *p; {
 		ilfield = 8;
 		return;
 
+	case 'i':	/* sconv int -> double */
+		oreg_r = getlr( p, '3' )->rval;
+		oreg_val = getlr( p, '3' )->lval;
+		treg_r = getlr( p, '1' )->rval;
+		freg_r = getlr( p, '2' )->rval;
+		printf("         MVC   %d(4,%s),=XL8'4E00000080000000' sconv3i1\n", oreg_val, rnames[ oreg_r ]);
+		printf("         ST    %s,%d(,%s)\n", rnames[ treg_r ], oreg_val+4, rnames[ oreg_r ]);
+		printf("         XI    %d(%s),128\n", oreg_val+4, rnames[ oreg_r ]);
+		printf("         LD    %s,%d(,%s)\n", rnames[ freg_r ], oreg_val, rnames[ oreg_r ]);
+		printf("         SD    %s,=XL8'4E00000080000000'\n", rnames[ freg_r ]);
+		return;
+
+	case 'j':	/* sconv double -> int */
+		oreg_r = getlr( p, '3' )->rval;
+		oreg_val = getlr( p, '3' )->lval;
+		treg_r = getlr( p, '1' )->rval;
+		freg_r = getlr( p, '2' )->rval;
+		printf("         LDR   %s," , rnames[ freg_r ]);
+		adrput( getlr( p, 'L' ) );
+		printf("    sconv5\n");
+		printf("         AD    %s,=XL8'4F08000000000000'\n", rnames[ freg_r ]);
+		printf("         STD   %s,%d(,%s)\n", rnames[ freg_r ], oreg_val, rnames[ oreg_r ]);
+		printf("         L     %s,%d(,%s)\n", rnames[ treg_r ], oreg_val+4, rnames[ oreg_r ]);
+		return;
+
+	case 'k':
+		if ( p->right->op != ICON )
+			cerror ("Zk not ICON");
+		printf ( "%ld", p->right->lval );
+		return;
+
+	case 'u':	/* sconv unsigned -> double */
+#if 0
+		printf("         L     2,0(11) sconv3u\n");
+		printf("         MVC   80(4,13),=XL8'4E00000080000000'\n");
+		printf("         ST    2,84(,13)\n");
+		printf("         XI    84(13),128\n");
+		printf("         LD    0,80(,13)\n");
+		printf("         SD    0,=XL8'4E00000080000000'\n");
+		printf("         STD   0,88(13)\n");
+		printf("         L     2,0(11)\n");
+		printf("         LTR   2,2\n");
+		printf("         BNL   *+16   L2\n");
+		printf("         LD    0,88(13)\n");
+		printf("         AD    0,=D'4.294967296E9'\n");
+		printf("         STD   0,88(13)\n");
+		printf("*L2       EQU   *\n");
+		printf("         LD    0,88(13)\n");
+#else
+		printf("         DC    X'0000'    FIXME sconv3u\n");
+#endif
+		return;
+
 	case 'S':  /* structure assignment */
 		{
 			register NODE *l, *r;
@@ -286,7 +358,7 @@ zzzcode( p, c ) NODE *p; {
 				printf (",");
 				adrput( getlr ( r, 'R' ));
 				printf( "    stasg1\n");
-				printf("          MVC   %d(%d,%s),0(%d)   stasg1a\n", l->lval, size, rnames[l->rval], getlr(p, '1')->rval);
+				printf("          MVC   %ld(%d,%s),0(%d)   stasg1a\n", l->lval, size, rnames[l->rval], getlr(p, '1')->rval);
 				}
 			 else {
 				printf( "          L    " );
@@ -299,7 +371,7 @@ zzzcode( p, c ) NODE *p; {
 				printf ("),"),
 				adrput( getlr ( r, 'R' ));
 				printf ("    stasg2a\n");
-				// %d(%d,%s),0(%d)   stasg2a\n", l->lval, size, rnames[l->rval], getlr(p, '1')->rval);
+				/* %d(%d,%s),0(%d)   stasg2a\n", l->lval, size, rnames[l->rval], getlr(p, '1')->rval); */
 				}
 
 			if( r->op == NAME ) r->op = ICON;
@@ -413,7 +485,7 @@ shumul( p ) register NODE *p; {
 	register o;
 
 	o = p->op;
-	if( o == NAME || o == OREG || o == ICON ) return( STARNM );
+	if( /* o == NAME || */ o == OREG || o == ICON ) return( STARNM );
 
 	if( ( o == INCR || o == ASG MINUS ) &&
 	    ( p->left->op == REG && p->right->op == ICON ) &&
@@ -436,12 +508,12 @@ conput( p ) register NODE *p; {
 			markref( p->rval );
 			/* if (p->name[0] == '$' && p->name[1] == 'L') */
 			if ( p->lval )
-				fprintf( outfile, "AL4(%.8s+%d)", p->name, p->lval );
+				fprintf( outfile, "AL4(%.8s+%ld)", p->name, p->lval );
 			else
 				fprintf( outfile, "AL4(%.8s)", p->name );
 			}
 		else {
-			fprintf ( outfile, "%c'%d'", 'F', p->lval );
+			fprintf ( outfile, "%c'%ld'", 'F', p->lval );
 			}
 		return;
 
@@ -617,10 +689,14 @@ printp8(s) char*s; {
 #endif
 acon( p ) register NODE *p; { /* print out a constant */
 	char szchar;
+	long lval;
 
 	szchar = 'F';
 	if (p->op == ICON && p->name[0] && p->rval < 0) {
-		printf ("=AL4(%.8s)", p->name);
+		if (p->lval)
+			printf ("=AL4(%.8s+%ld)", p->name, p->lval);
+		else
+			printf ("=AL4(%.8s)", p->name);
 		return;
 		}
 #if 0
@@ -669,11 +745,16 @@ acon( p ) register NODE *p; { /* print out a constant */
 		szchar = '?';
 		/* cerror( "acon: failed type %d", p->type ); */
 
+	lval = p->lval;
+#ifndef ibm
+	if (sizeof(long) == 8 && !ISUNSIGNED( p->type ) && lval & 0x80000000L)
+		lval |= 0xffffffff00000000L;  /* sign extension hack */
+#endif
 	if( p->name[0] == '\0' ){	/* constant only */
 		if ( szchar == 'X' )
-			printf( "=X'%02x'", p->lval & 0xff);
+			printf( "=X'%02lx'", lval & 0xff);
 		else
-			printf( "=%c'%ld'", szchar, p->lval);
+			printf( "=%c'%d'", szchar, lval);
 		}
 	else /* if( p->lval == 0) */ {	/* name only */
 #if 0
@@ -741,11 +822,13 @@ gencall( p, cookie ) register NODE *p; {
 
 	if (arglvlc[arglvl-1] != arglvlo[arglvl-1])
 		cerror ("arglvl arg count error");
-	if ( temp )
-		/* printf("          LA    1,%ld(,%d)   gencall1 baseoff/8 %d\n", (baseoff >> 3)+(arglvlo[arglvl-1]*4), STKREG, baseoff >> 3); */
-		printf("          LA    1,$B%05d+%ld(,%d)   gencall1 baseoff %d args %d l %d\n", ftnno, arglvlo[arglvl-1]*4, STKREG, baseoff >> 3, temp >> 2, arglvl);
-	else
+	if ( temp ) {
+		/* printf("          LA    1,$B%05d+%d(,%d)   gencall1 baseoff %ld args %d l %d\n", ftnno, arglvlo[arglvl-1]*4, STKREG, baseoff >> 3, temp >> 2, arglvl); */
+		printf("          L     1,=AL4($B%05d+%d)   gencall1 baseoff %ld args %d l %d\n", ftnno, arglvlo[arglvl-1]*4, baseoff >> 3, temp >> 2, arglvl);
+		printf("          AR    1,%d   gencall1a\n", STKREG);
+	} else {
 		printf("          SLR   1,1   gencall2\n" );
+	}
 	p->op = UNARY CALL;
 	m = match( p, INTAREG|INTBREG );
 	if ( temp )
@@ -760,16 +843,16 @@ popargs( size ) register size; {
 
 char *
 ccbranches[] = {
-	"          BE    $L%05d     line %d case %d\n",
-	"          BNE   $L%05d     line %d case %d\n",
-	"          BNH   $L%05d     line %d case %d\n",
-	"          BL    $L%05d     line %d case %d\n",
-	"          BNL   $L%05d     line %d case %d\n",
-	"          BH    $L%05d     line %d case %d\n",
-	"          BNH   $L%05d     line %d case %d\n",
-	"          BL    $L%05d     line %d case %d\n",
-	"          BNL   $L%05d     line %d case %d\n",
-	"          BH    $L%05d     line %d case %d\n",
+	"          BE    %s     line %d case %d\n",
+	"          BNE   %s     line %d case %d\n",
+	"          BNH   %s     line %d case %d\n",
+	"          BL    %s     line %d case %d\n",
+	"          BNL   %s     line %d case %d\n",
+	"          BH    %s     line %d case %d\n",
+	"          BNH   %s     line %d case %d\n",
+	"          BL    %s     line %d case %d\n",
+	"          BNL   %s     line %d case %d\n",
+	"          BH    %s     line %d case %d\n",
 	};
 
 /*	long branch table
@@ -832,10 +915,10 @@ cbgen( o, lab, mode ) { /*   printf conditional and unconditional branches */
 			if( mode=='F' ) o = revrel[ o-EQ ];
 #if 1
 			o = negrel[ o-EQ ];
-			printf( ccbranches[o-EQ], t=getlab() , lineno, 4);
+			printf( ccbranches[o-EQ], /* t=getlab() */ "*+10", lineno, 4);
 			printf("          L    14,=A($L%05d)   cbgen2\n", lab);
 			printf("          BR   14   cbgen2a\n");
-			deflab( t, 0 );
+			/* deflab( t, 0 ); */
 #else
 			printf( ccbranches[o-EQ], lab , lineno, 4);
 #endif
