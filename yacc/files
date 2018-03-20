@@ -5,7 +5,17 @@
 	/* also be changed  */
 
 	/* location of the parser text file */
-# define PARSER "/home/mhp/pcc/yacc/yaccpar"
 
 	/* basic size of the Yacc implementation */
 # define HUGE
+# define WORD32
+
+#ifdef __MVS__
+# define ZAPFILE(x)
+# define ACTNAME "dd:acts"
+# define PARSER "dd:yaccpar"
+# define TEMPNAME "dd:yacctmp"
+# define OFILE "dd:output"
+#else
+# define PARSER "yaccpar"
+#endif
