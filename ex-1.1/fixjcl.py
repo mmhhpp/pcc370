@@ -1,5 +1,8 @@
 #! /usr/bin/env python
 
+# workaround for
+#    IEW0254 ERROR - TABLE OVERFLOW -- TOO MANY EXTERNAL SYMBOLS IN ESD.
+
 import sys
 
 unref = open('unref').read().rstrip().split('\n')
