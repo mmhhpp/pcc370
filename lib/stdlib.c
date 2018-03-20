@@ -113,20 +113,15 @@ __PDPCLIB_API__ char *malloc ( size ) size_t size ;
 #else
         ptr = NULL;
 #endif
-#elif defined(__WIN32__)
-        ptr = GlobalAlloc(0, size + sizeof(size_t));
-        if (ptr != NULL)
-        {
-            *(size_t *)ptr = size;
-            ptr = (char *)ptr + sizeof(size_t);
-        }
-#elif defined(__gnu_linux__)
+#else
+#if defined(__gnu_linux__)
         ptr = __allocmem(size + sizeof(size_t));
         if (ptr != NULL)
         {
             *(size_t *)ptr = size;
             ptr = (char *)ptr + sizeof(size_t);
         }
+#endif
 #endif
     }
     else
@@ -151,20 +146,15 @@ __PDPCLIB_API__ char *malloc ( size ) size_t size ;
             {
                 ptr2 = NULL;
             }
-#elif defined(__WIN32__)
-            ptr2 = GlobalAlloc(0, REQ_CHUNK);
-            if (ptr2 != NULL)
-            {
-                *(size_t *)ptr2 = size;
-                ptr2 = (char *)ptr2 + sizeof(size_t);
-            }
-#elif defined(__gnu_linux__)
+#else
+#if defined(__gnu_linux__)
             ptr2 = __allocmem(REQ_CHUNK);
             if (ptr2 != NULL)
             {
                 *(size_t *)ptr2 = size;
                 ptr2 = (char *)ptr2 + sizeof(size_t);
             }
+#endif
 #endif
             if (ptr2 == NULL)
             {
@@ -179,17 +169,8 @@ __PDPCLIB_API__ char *malloc ( size ) size_t size ;
 #else /* not MEMMGR */
 #if defined(__MVS__) || defined(__CMS__)
     return (__getm(size));
-#elif defined(__WIN32__)
-    void *ptr;
-
-    ptr = GlobalAlloc(0, size + sizeof(size_t));
-    if (ptr != NULL)
-    {
-        *(size_t *)ptr = size;
-        ptr = (char *)ptr + sizeof(size_t);
-    }
-    return (ptr);
-#elif defined(__gnu_linux__)
+#else 
+#if defined(__gnu_linux__)
     void *ptr;
 
     ptr = __allocmem(size + sizeof(size_t));
@@ -199,6 +180,7 @@ __PDPCLIB_API__ char *malloc ( size ) size_t size ;
         ptr = (char *)ptr + sizeof(size_t);
     }
     return (ptr);
+#endif
 #endif
 #endif /* not MEMMGR */
 }
@@ -290,8 +272,6 @@ __PDPCLIB_API__ void free ( ptr ) void  ptr ;
             /* Ignore, unless MULMEM is defined, until MVS/380 is fixed */
             __freem(ptr);
 #endif
-#elif defined(__WIN32__)
-            GlobalFree(ptr);
 #endif
         }
         else
@@ -326,11 +306,15 @@ __PDPCLIB_API__ void abort (  )
 #endif
 }
 
+#ifdef ibm
+__exit();
+#else
 #if !defined(__EMX__) && !defined(__GCC__) && !defined(__WIN32__) \
-  && !defined(__gnu_linux__)
+  && !defined(__gnu_linux__) && !defined(ibm)
 void __exit(int status);
 #else
 void __exit();
+#endif
 #endif
 
 __PDPCLIB_API__ void exit ( status ) int status ;
@@ -894,7 +878,8 @@ __PDPCLIB_API__ int system ( string ) const char *string ;
 #endif
 #if defined(MUSIC)
     return (__system(strlen(string), string));
-#elif defined(__MVS__)
+#else 
+#if defined(__MVS__)
     char pgm[9];
     size_t pgm_len;
     size_t cnt;
@@ -931,6 +916,7 @@ __PDPCLIB_API__ int system ( string ) const char *string ;
     /* all parms now available */
     /* we use 1 = batch or 2 = tso */
     return (__system(__tso ? 2: 1, pgm_len, pgm, strlen(p), p));
+#endif
 #endif
 #if defined(__CMS__)
     /* not implemented yet */

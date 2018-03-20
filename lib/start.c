@@ -93,15 +93,20 @@ char *__plist;
 
 #if defined(__CMS__)
 int __start(char *plist, char *pgmname, char **eplist)
-#elif defined(__VSE__)
+#endif
+#if defined(__VSE__)
 int __start(char *p, char *pgmname, char *ep)
-#elif defined(__MVS__)
+#endif
+#if defined(__MVS__)
 int __start(p, pgmname, tso) char *p; char *pgmname; int tso;
-#elif defined(__gnu_linux__)
+#endif
+#if defined(__gnu_linux__)
 int __start(int argc, char **argv)
-#elif (defined(__PDOS__) && !defined(__MVS__))
+#endif
+#if (defined(__PDOS__) && !defined(__MVS__))
 int __start(int *i1, int *i2, int *i3, POS_EPARMS *exep)
-#else
+#endif
+#if 0 /* ? */
 __PDPCLIB_API__ int CTYP __start(p) char *p;
 #endif
 {
@@ -534,7 +539,8 @@ __PDPCLIB_API__ int CTYP __start(p) char *p;
         }
         memcpy(parmbuf + 2, eplist[1], parmLen);
     }
-#elif defined(__VSE__)
+#endif
+#if defined(__VSE__)
     __upsi = pgmname[9]; /* we shouldn't really clump this */
 
     if (ep != NULL)
@@ -586,7 +592,8 @@ __PDPCLIB_API__ int CTYP __start(p) char *p;
     {
         parmLen = 0;
     }
-#else /* MVS etc */
+#endif
+#if !defined(__CMS__) && !defined(__VSE__)  /* MVS etc */
     parmLen = ((unsigned int)p[0] << 8) | (unsigned int)p[1];
     if (parmLen >= sizeof parmbuf - 2)
     {
@@ -695,7 +702,7 @@ __PDPCLIB_API__ int CTYP __start(p) char *p;
     p[*p + 1] = '\0';
     p++;
 #endif
-#if !defined(__gnu_linux__)
+#ifndef __gnu_linux__
     while (*p == ' ')
     {
         p++;

@@ -2128,6 +2128,44 @@ RETURN99 DS    0H
 *
 *
 *
+         ENTRY SETEXIT
+         DS    0H
+SETEXIT  EQU   *
+         STM   14,12,12(13)
+         LR    1,12
+         BALR  12,0
+         USING *,12
+         ST    1,$$STX12
+         ST    10,$$STX10
+         ST    13,$$STX13
+         ST    14,$$STX14
+         MVC   $$STXMG(4),=X'12345678'
+         LM    14,12,12(13)
+         BR    14
+         DROP  12
+*
+         ENTRY RESET
+RESET    EQU   *
+         STM   14,12,12(13)
+         BALR  12,0
+         USING *,12
+         CLC   $$STXMG(4),=X'12345678'
+         BE    *+6
+         DC    X'0000'
+         L     1,$$STX12
+         L     10,$$STX10
+         L     13,$$STX13
+         L     14,$$STX14
+         DROP  12
+         LR    12,1
+         BR    14
+*
+         DS    0F
+$$STX10  DS    F'0'
+$$STX12  DS    F'0'
+$$STX13  DS    F'0'
+$$STX14  DS    F'0'
+$$STXMG  DS    F'0'
 ***********************************************************************
 ***********************************************************************
 *                                                                     *

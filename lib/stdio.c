@@ -110,9 +110,9 @@ extern void CTYP __rename();
 #if defined(__MVS__) || defined(__CMS__)
 #include "mvssupa.h"
 #define FIXED_BINARY 0
-#define VARIABLE_BINARY 1
+#define VAR_BINARY 1
 #define FIXED_TEXT 2
-#define VARIABLE_TEXT 3
+#define VAR_TEXT 3
 #endif
 
 #if defined(__gnu_linux__)
@@ -203,7 +203,7 @@ static unsigned char *dptr;
 static size_t lenwrite;
 static int    inseek = 0;
 static size_t lenread;
-#define __aread(a,b) ((__aread)((a),(b),&lenread))
+#define ___aread(a,b) ((__aread)((a),(b),&lenread))
 #endif
 
 
@@ -818,9 +818,10 @@ dbg_cond |= 16;
         myfile->dynal = 1;
         p = tmpdd;
     }
-#elif defined(__MVS__)
+#endif
+#if defined(__MVS__)
 
-#if !defined(MUSIC) /* for MUSIC, send everything through to SVC99 */
+#ifndef MUSIC /* for MUSIC, send everything through to SVC99 */
     if ((strchr(fnm, '\'') == NULL) && (strchr(fnm, '(') == NULL))
 #endif
     {
@@ -846,7 +847,7 @@ dbg_cond |= 32;
         p = tmpdd;
     }
 
-#if !defined(MUSIC)
+#ifndef MUSIC
     /* This is our traditional function for MVS. Keep it for now,
        for the complex strings. For the simple strings, which
        are always used on environments such as PDOS and MUSIC,
@@ -917,8 +918,8 @@ dbg_cond |= 2;
         p = newfnm;
     }
 #endif /* MUSIC */
-
-#else
+#endif
+#if !defined(__CMS__) && !defined(__MVS__)
     {
         p = (char *)fnm;
     }
@@ -966,13 +967,13 @@ dbg_cond |= 2;
        fails */
     if (myfile->textMode)
     {
-        myfile->recfm = __RECFM_V;
+        myfile->recfm = _RECFM_V;
         myfile->lrecl = 255;
         myfile->blksize = 6233;
     }
     else
     {
-        myfile->recfm = __RECFM_U;
+        myfile->recfm = _RECFM_U;
         myfile->lrecl = 0;
         myfile->blksize = 6233;
     }
@@ -1010,7 +1011,7 @@ dbg_cond |= 4;
         return;
     }
     /* if we have a RECFM=U, do special processing */
-    if (myfile->recfm == __RECFM_U)
+    if (myfile->recfm == _RECFM_U)
     {
         myfile->reallyu = 1;
         myfile->quickBin = 0; /* switch off to be on the safe side */
@@ -1018,12 +1019,12 @@ dbg_cond |= 4;
         /* if open for writing, kludge to switch to fixed */
         if (mode == 1)
         {
-            myfile->recfm = __RECFM_F;
+            myfile->recfm = _RECFM_F;
         }
         /* if open for reading, kludge to switch to variable */
         else if (mode == 0)
         {
-            myfile->recfm = __RECFM_V;
+            myfile->recfm = _RECFM_V;
         }
         /* we need to work with a decent lrecl in case the
            assembler routine set the real thing */
@@ -1042,7 +1043,7 @@ dbg_cond |= 8;
     }
     /* if we have RECFM=V, the usable lrecl is 4 bytes shorter
        than we are told, so just adjust that here */
-    else if (myfile->recfm == __RECFM_V)
+    else if (myfile->recfm == _RECFM_V)
     {
        if (myfile->lrecl > 4)
        {
@@ -1074,7 +1075,7 @@ dbg_cond |= 8;
        probably be done in a less complicated manner! */
     myfile->style += myfile->recfm;
 
-    if (myfile->style == VARIABLE_TEXT)
+    if (myfile->style == VAR_TEXT)
     {
         myfile->quickText = 1;
     }
@@ -4584,7 +4585,7 @@ __aopen returns a "handle" on success, or a negative value
 be unclumped in the future.
 
 
-int __aread(void *handle, void *buf, size_t *len);
+int ___aread(void *handle, void *buf, size_t *len);
 
 This function takes the handle previously returned from __aopen
 and reads into the provided buffer a single record. It is
@@ -4594,7 +4595,7 @@ of the actual record returned, e.g. if RECFM=U, then while
 reading each record (block), the length might change.
 In the case of RECFM=V, the record includes a RDW.
 
-__aread returns 0 on success, non-zero on failure.
+___aread returns 0 on success, non-zero on failure.
 
 
 int __awrite(void *handle, unsigned char **buf, size_t *sz);
@@ -4665,7 +4666,7 @@ __PDPCLIB_API__ char *fgets(s, n, stream) char *s; int n; FILE *stream;
 
     if (stream->quickText)
     {
-        if (__aread(stream->hfile, &dptr) != 0)
+        if (___aread(stream->hfile, &dptr) != 0)
         {
             stream->eofInd = 1;
             stream->quickText = 0;
@@ -4704,7 +4705,7 @@ __PDPCLIB_API__ char *fgets(s, n, stream) char *s; int n; FILE *stream;
             if ((stream->endbuf == stream->fbuf)
                 && (n > (stream->lrecl + 2)))
             {
-                if (__aread(stream->hfile, &dptr) != 0)
+                if (___aread(stream->hfile, &dptr) != 0)
                 {
                     stream->eofInd = 1;
                     return (NULL);
@@ -4904,7 +4905,7 @@ __PDPCLIB_API__ size_t fwrite(ptr, size, nmemb, stream) const void *ptr; size_t 
             stream->upto += bytes;
             break;
 
-        case VARIABLE_BINARY:
+        case VAR_BINARY:
             bytes = nmemb * size;
             while (bytes > 0)
             {
@@ -5097,7 +5098,7 @@ __PDPCLIB_API__ size_t fwrite(ptr, size, nmemb, stream) const void *ptr; size_t 
             }
             break;
 
-        case VARIABLE_TEXT:
+        case VAR_TEXT:
             stream->quickText = 0;
             bytes = nmemb * size;
             p = memchr(ptr, '\n', bytes);
@@ -5242,7 +5243,7 @@ __PDPCLIB_API__ size_t fread(ptr, size, nmemb, stream) void *ptr; size_t size; s
     {
         if ((nmemb == 1) && (size == stream->lrecl))
         {
-            if (__aread(stream->hfile, &dptr) != 0)
+            if (___aread(stream->hfile, &dptr) != 0)
             {
                 stream->eofInd = 1;
                 stream->quickBin = 0;
@@ -5291,7 +5292,7 @@ __PDPCLIB_API__ size_t fread(ptr, size, nmemb, stream) void *ptr; size_t size; s
 
             while (totalread < bytes)
             {
-                if (__aread(stream->hfile, &dptr) != 0)
+                if (___aread(stream->hfile, &dptr) != 0)
                 {
                     stream->eofInd = 1;
                     break;
@@ -5346,7 +5347,7 @@ __PDPCLIB_API__ size_t fread(ptr, size, nmemb, stream) void *ptr; size_t size; s
 
             while (totalread < bytes)
             {
-                if (__aread(stream->hfile, &dptr) != 0)
+                if (___aread(stream->hfile, &dptr) != 0)
                 {
                     stream->eofInd = 1;
                     break;
@@ -5369,7 +5370,7 @@ __PDPCLIB_API__ size_t fread(ptr, size, nmemb, stream) void *ptr; size_t size; s
             return ((size == 0) ? 0 : (totalread / size));
             break;
 
-        case VARIABLE_TEXT:
+        case VAR_TEXT:
             bytes = nmemb * size;
             read = stream->endbuf - stream->upto;
             if (read > bytes)
@@ -5388,7 +5389,7 @@ __PDPCLIB_API__ size_t fread(ptr, size, nmemb, stream) void *ptr; size_t size; s
 
             while (totalread < bytes)
             {
-                if (__aread(stream->hfile, &dptr) != 0)
+                if (___aread(stream->hfile, &dptr) != 0)
                 {
                     stream->eofInd = 1;
                     break;
@@ -5424,7 +5425,7 @@ __PDPCLIB_API__ size_t fread(ptr, size, nmemb, stream) void *ptr; size_t size; s
             return ((size == 0) ? 0 : (totalread / size));
             break;
 
-        case VARIABLE_BINARY:
+        case VAR_BINARY:
             bytes = nmemb * size;
             read = stream->endbuf - stream->upto;
             if (read > bytes)
@@ -5443,7 +5444,7 @@ __PDPCLIB_API__ size_t fread(ptr, size, nmemb, stream) void *ptr; size_t size; s
 
             while (totalread < bytes)
             {
-                if (__aread(stream->hfile, &dptr) != 0)
+                if (___aread(stream->hfile, &dptr) != 0)
                 {
                     stream->eofInd = 1;
                     break;
@@ -5564,7 +5565,7 @@ static void filedef(fdddname, fnm, mymode) char *fdddname; char *fnm; int mymode
         if ( mymode )
         {
             tu[2].parm1[0] = 0x04; /* NEW */
-#if !defined(__PDOS__) /* PDOS uses RECFM=U by default */
+#ifndef __PDOS__ /* PDOS uses RECFM=U by default */
             /* if binary */
             if (modeType == 5)
             {
