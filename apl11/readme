@@ -1,0 +1,57 @@
+
+
+
+
+          This is APL\11, an APL interpreter for the UNIX operating 
+          system.  The interpreter is written in C and the source code
+          is freely available.  The code is reasonably portable, sub-
+          ject to several restrictions including interchangeable 
+          pointers and ints.  Portability is discussed in more detail 
+          in the manual included with this distribution.  
+          
+          APL\11 has a relatively long history.  The original program 
+          was written by Ken Thompson at Bell Laboratories, apparently
+          in the days before Version 6 UNIX.  That version of the 
+          interpreter was extensively modified at Purdue University, 
+          and has been included on the Berkeley distribution tapes 
+          subject to the requirement that you have a UNIX source 
+          license.  
+          
+          Early in '92, I acquired a 386sx, a copy of Linus Torvalds' 
+          linux, and a copy of Bellcore's MGR windowing software.  A 
+          little voice in the back of my head said "This multitasking 
+          virtual-memory windowed system is nice, and if it had APL it
+          would be just about perfect!"  There's no accounting for 
+          taste.  After asking USENET, it was apparent that no other 
+          source-code available APL interpreters for UNIX had been 
+          written.  I had a legal copy of the APL\11 source which had 
+          followed me from Bell Labs to Bellcore and on to U S WEST.  
+          
+          After a lot of nagging, AT&T licensed the source code to 
+          U S WEST, including the right to sublicense it without the 
+          old UNIX source license requirement (big companies don't 
+          seem to understand "just give it away").  I've cleaned it 
+          up, fixed several errors, written some new documentation, 
+          reformatted a lot of the old Purdue documentation, and added
+          a little additional functionality.  It's available for 
+          general use.  
+          
+          I plan to provide support for the interpreter as my personal
+          time and interests permit (somewhere after wife, kids, house
+          maintenance and building a new piano bench).  The normal 
+          distribution channel will be the ftp archive at wat-
+          serv1.waterloo.edu.  If you are actively using APL\11, send 
+          me a note.  E-mail should be sent to mcain@adv-
+          tech.uswest.com.  Bug reports are welcome, although I can't 
+          promise how soon they'll get fixed.  Patches that fix bugs 
+          are even more welcome, and will get more prompt attention.  
+          
+          Enjoy!  
+          
+          
+          Michael Cain
+          4001 Discovery Drive
+          U S WEST Advanced Technologies
+          Boulder, CO  80303
+          303-541-6225
+          mcain@advtech.uswest.com
