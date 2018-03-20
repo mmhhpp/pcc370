@@ -14,7 +14,9 @@
 #define __TIME_INCLUDED
 
 #define CLOCKS_PER_SEC 1000
+#ifndef NULL
 #define NULL ((void *)0)
+#endif
 
 typedef unsigned int clock_t;
 
@@ -23,13 +25,17 @@ typedef unsigned int clock_t;
 #if (defined(__OS2__) || defined(__32BIT__) || defined(__MVS__) \
     || defined(__CMS__) || defined(__VSE__))
 typedef unsigned long size_t;
-#elif (defined(__MSDOS__) || defined(__DOS__) || defined(__POWERC) \
+#else
+#if (defined(__MSDOS__) || defined(__DOS__) || defined(__POWERC) \
     || defined(__WIN32__) || defined(__gnu_linux__))
 typedef unsigned int size_t;
 #endif
 #endif
+#endif
 
+#ifndef ibm
 typedef unsigned long time_t;
+#endif
 
 struct tm
 {
@@ -44,6 +50,17 @@ struct tm
     int tm_isdst;
 };
 
+#ifdef ibm
+time();
+clock();
+double difftime();
+time_t mktime();
+char *asctime();
+char *ctime();
+struct tm *gmtime();
+struct tm *localtime();
+size_t strftime();
+#else
 time_t time(time_t *timer);
 clock_t clock(void);
 double difftime(time_t time1, time_t time0);
@@ -54,5 +71,6 @@ struct tm *gmtime(const time_t *timer);
 struct tm *localtime(const time_t *timer);
 size_t strftime(char *s, size_t maxsize,
                 const char *format, const struct tm *timeptr);
+#endif
 
 #endif

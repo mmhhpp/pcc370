@@ -20,7 +20,7 @@
 /*
  This is about the nearest thing we can get to inf wthout
 */
-#define HUGE_VAL 9.999999999999999999999E72
+#define HUGE_VAL 10E72
 
 #else
 
@@ -28,37 +28,37 @@
 
 #endif
 
-double ceil(double x);
-double fabs(double x);
-double floor(double x);
-double fmod(double x, double y);
+double ceil();
+double fabs();
+double floor();
+double fmod();
 
 /* unimplemented: */
 
 
-double atan2(double y, double x);
-double frexp(double value, int *exp);
-double ldexp(double x, int exp);
-double modf(double value, double *iptr);
+double atan2();
+double frexp();
+double ldexp();
+double modf();
 
 /*
   Implemented by d.wade - April 2006
 */
 
-double pow(double x, double y);
-double sqrt(double x);
-double acos(double x);
-double asin(double x);
-double atan(double x);
-double cos(double x);
-double sin(double x);
-double tan(double x);
-double cosh(double x);
-double sinh(double x);
-double tanh(double x);
-double exp(double x);
-double log(double x);
-double log10(double x);
+double pow();
+double sqrt();
+double acos();
+double asin();
+double atan();
+double cos();
+double sin();
+double tan();
+double cosh();
+double sinh();
+double tanh();
+double exp();
+double log();
+double log10();
 
 
 #ifdef __WATCOMC__

@@ -19,9 +19,11 @@ typedef int ptrdiff_t;
 #if (defined(__OS2__) || defined(__32BIT__) || defined(__MVS__) \
     || defined(__CMS__) || defined(__VSE__))
 typedef unsigned long size_t;
-#elif (defined(__MSDOS__) || defined(__DOS__) || defined(__POWERC) \
+#else
+#if (defined(__MSDOS__) || defined(__DOS__) || defined(__POWERC) \
     || defined(__WIN32__) || defined(__gnu_linux__))
 typedef unsigned int size_t;
+#endif
 #endif
 #endif
 #ifndef __WCHAR_T_DEFINED
@@ -32,7 +34,9 @@ typedef unsigned int size_t;
 typedef char wchar_t;
 #endif
 
+#ifndef NULL
 #define NULL (0)
+#endif
 #define offsetof(x, y) (size_t)&(((x *)0)->y)
 
 #ifdef __PDPCLIB_DLL

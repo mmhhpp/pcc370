@@ -23,9 +23,11 @@
 #if (defined(__OS2__) || defined(__32BIT__) || defined(__MVS__) \
     || defined(__CMS__) || defined(__VSE__))
 typedef unsigned long size_t;
-#elif (defined(__MSDOS__) || defined(__DOS__) || defined(__POWERC) \
+#else
+#if (defined(__MSDOS__) || defined(__DOS__) || defined(__POWERC) \
     || defined(__WIN32__) || defined(__gnu_linux__))
 typedef unsigned int size_t;
+#endif
 #endif
 #endif
 
@@ -110,7 +112,9 @@ typedef struct
 
 typedef unsigned long fpos_t;
 
+#ifndef NULL
 #define NULL (0)
+#endif
 #define FILENAME_MAX 260
 #define FOPEN_MAX 256
 #define _IOFBF 1
@@ -126,10 +130,12 @@ typedef unsigned long fpos_t;
 /* also add in room for a RDW and dword align it just to be
    on the safe side */
 #define BUFSIZ 32768
-#elif defined(__CMS__)
+#endif
+#if defined(__CMS__)
 /* similar considerations for CMS as MVS */
 #define BUFSIZ 65544
-#else
+#endif
+#if !defined(__MVS__) && !defined(__VSE__) && !defined(__CMS__)
 #define BUFSIZ 6144
 #endif
 /* #define BUFSIZ 10 */
@@ -144,9 +150,9 @@ typedef unsigned long fpos_t;
 #define __WRITE_MODE 1
 #define __READ_MODE 2
 
-#define __RECFM_F 0
-#define __RECFM_V 1
-#define __RECFM_U 2
+#define _RECFM_F 0
+#define _RECFM_V 1
+#define _RECFM_U 2
 
 #if 0
 extern FILE *stdin;

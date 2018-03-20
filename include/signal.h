@@ -15,9 +15,9 @@
 
 typedef int sig_atomic_t;
 
-void __sigdfl();
-void __sigerr();
-void __sigign();
+__sigdfl();
+__sigerr();
+__sigign();
 
 #define SIG_DFL __sigdfl
 #define SIG_ERR __sigerr
@@ -29,9 +29,10 @@ void __sigign();
 #define SIGINT 4
 #define SIGSEGV 5
 #define SIGTERM 6
+#define SIGQUIT 7
 #define SIGHUP  1
 
-void (*signal())();
+(*signal())();
 int raise();
 
 #endif

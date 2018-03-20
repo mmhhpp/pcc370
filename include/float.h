@@ -39,7 +39,7 @@
 #define DBL_DIG 15
 #define LDBL_DIG 15
 
-
+#if 0
 #define FLT_MIN_EXP (-64)
 #define DBL_MIN_EXP (-64)
 #define LDBL_MIN_EXP (-64)
@@ -55,6 +55,7 @@
 #define FLT_MAX_10_EXP 75
 #define DBL_MAX_10_EXP 75
 #define LDBL_MAX_10_EXP 75
+#endif
 
 /*
   This is a temporary fiddle to get round bug in GCC
@@ -73,7 +74,6 @@ static _HexFloat _DblMax =  {{0x7fff ,0xffff ,0xffff ,0xffff}};
 static _HexFloat _DblMin =  {{0x0010 ,0x0000 ,0x0000 ,0x0000}};
 static _HexFloat _FltEps =  {{0x3C10 ,0x0000 ,0x0000 ,0x0000}};
 static _HexFloat _DblEps =  {{0x3410 ,0x0000 ,0x0000 ,0x0000}};
-#endif
 #define FLT_MAX _FltMax._Fval
 #define DBL_MAX _DblMax._Dval
 #define LDBL_MAX _DblMax._Lval
@@ -85,6 +85,7 @@ static _HexFloat _DblEps =  {{0x3410 ,0x0000 ,0x0000 ,0x0000}};
 #define FLT_EPSILON _FltEps._Fval
 #define DBL_EPSILON _DblEps._Fval
 #define LDBL_EPSILON _DblEps._Fval
+#endif
 
 
 
@@ -123,6 +124,8 @@ static _HexFloat _DblEps =  {{0x3410 ,0x0000 ,0x0000 ,0x0000}};
 #define DBL_MIN 1E-37
 #define LDBL_MIN 1E-37
 #endif
+
+#define DBL_MIN 1E-75
 
 #endif
 

@@ -21,9 +21,11 @@
 #if (defined(__OS2__) || defined(__32BIT__) || defined(__MVS__) \
     || defined(__CMS__) || defined(__VSE__))
 typedef unsigned long size_t;
-#elif (defined(__MSDOS__) || defined(__DOS__) || defined(__POWERC) \
+#else
+#if (defined(__MSDOS__) || defined(__DOS__) || defined(__POWERC) \
     || defined(__WIN32__) || defined(__gnu_linux__))
 typedef unsigned int size_t;
+#endif
 #endif
 #endif
 #ifndef __WCHAR_T_DEFINED
@@ -36,7 +38,9 @@ typedef char wchar_t;
 typedef struct { int quot; int rem; } div_t;
 typedef struct { long l_quot; long l_rem; } ldiv_t;
 
+#ifndef NULL
 #define NULL (0)
+#endif
 #define EXIT_SUCCESS 0
 #if defined(__MVS__) || defined(__CMS__) || defined(__VSE__)
 #define EXIT_FAILURE 12
