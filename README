@@ -35,6 +35,8 @@ USAGE
 
 To compile a module you can make a copy of the file ``370/runjcl.txt'' and modify it accordingly for your source and object dataset definitions.  The file ``ulinkjcl.txt'' contiains model JCL you can use for linking the application (search for and change two occurrences of "UTIL"; add additional SYSLIB statements as needed for each object module).
 
+Prior to building source in MVS you must populate the INCLUDE directory (by default this is named HERC01.H in the sample run jcl).  All of the .h files in include and include/sys should be copied to this MVS include data set.
+
 The apl and ex packages are not currently in a sane state.  Each package is complied without error and linked with a stub module (fake.c) that provides dummy replacements for many missing functions in the MVS standard library package.
 
 COMPATIBILITY
